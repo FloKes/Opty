@@ -10,7 +10,7 @@ init(Client, Validator, Store) ->
 handler(Client, Validator, Store, Reads, Writes) ->         
     receive
         {read, Ref, N} ->
-            case lists:keyfind(..., ..., ...) of  %% TODO: COMPLETE
+            case lists:keyfind(N, 1, Writes) of  %% TODO: done
                 {N, _, Value} ->
                     Client ! {value, Ref, Value}, %TODO done
                     handler(Client, Validator, Store, Reads, Writes);
