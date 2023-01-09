@@ -13,7 +13,7 @@ entry(Value, Time) ->
             From ! {Ref, self(), Value, Time}, %TODO done
             entry(Value, Time);
         {write, New} ->
-            entry(New , make_ref());  %% TODO: done
+            entry(New, make_ref());  %% TODO: done
         {check, Ref, Readtime, From} ->
             if 
                 Time == Readtime ->   %% TODO: done
