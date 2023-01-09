@@ -5,6 +5,8 @@ start(N) ->
     spawn(fun() -> init(N) end).
 
 init(N) ->
+    io:format("Initializing server with pid: ~w~n", 
+         [self()]),
     Store = store:new(N),
     Validator = validator:start(),
     server(Validator, Store).
