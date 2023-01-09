@@ -12,7 +12,7 @@ init(N) ->
 server(Validator, Store) ->
     receive 
         {open, Client} ->
-            Client ! {transaction, Validator, Store}, % TODO add code: done
+            Client ! {transaction, Validator, Store}, % // TODO add code: done
             server(Validator, Store);
         stop ->
             Validator ! stop,
