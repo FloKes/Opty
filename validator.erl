@@ -9,15 +9,23 @@ init()->
 
 validator() ->
     receive
-        {validate, Ref, Reads, Writes, Client} ->
+        {validate, Ref, Reads, Writes, Client, TransactionId} ->
             Tag = make_ref(),
-            send_read_checks(Reads, Tag),  %% // TODO: done
-            case check_reads(length(Reads), Tag) of  %% // TODO: done
+
+            send_write_checks(Writes, Tag), 
+            case check_writes(length(Writes), Tag) of  %% TODO: COMPLETE
                 ok ->
-                    update(Writes),  %% // TODO: done
+                    update(Writes),  %% TODO: COMPLETE
+
+                    send_read_deletes(Reads, Tag, TransactionId),
+                    delete_reads(length(Reads), Tag),
+
                     Client ! {Ref, ok};
                 abort ->
-                    Client ! {Ref, abort} % // TODO add code : done
+                    send_read_deletes(Reads, Tag, TransactionId),
+                    delete_reads(length(Reads), Tag),
+
+                    Client ! {Ref, abort}
             end,
             validator();
         stop ->
@@ -26,25 +34,46 @@ validator() ->
             validator()
     end.
     
-update(Writes) ->
-    lists:foreach(fun({_, Entry, Value}) -> 
-                    Entry ! {write, Value} % // TODO add code: done
-                  end, 
-                  Writes).
 
-send_read_checks(Reads, Tag) ->
+
+send_read_deletes(Reads, Tag, TransactionId) ->
     Self = self(),
-    lists:foreach(fun({Entry, Time}) -> 
-                    Entry ! {check, Tag, Time, Self} % // TODO add code done
+    lists:foreach(fun({Entry, _}) -> 
+                  Entry ! {deleteReads, TransactionId, Tag, Self}
                   end, 
                   Reads).
 
-check_reads(0, _) ->
+delete_reads(0, _) ->
     ok;
-check_reads(N, Tag) ->
+
+delete_reads(N, Tag) ->
+    receive 
+        Tag ->
+            delete_reads(N-1, Tag)
+    end.
+
+
+update(Writes) ->
+    lists:foreach(fun({_, Entry, Value}) -> 
+                  Entry ! {write, Value}
+                  end, 
+                  Writes).
+
+send_write_checks(Writes, Tag) ->
+    Self = self(),
+    lists:foreach(fun({_, Entry, _}) -> 
+                  Entry ! {check, Tag, Self}
+                  end, 
+                  Writes).
+
+check_writes(0, _) ->
+    ok;
+check_writes(N, Tag) ->
     receive
         {Tag, ok} ->
-            check_reads(N-1, Tag);
+            check_writes(N-1, Tag);
         {Tag, abort} ->
             abort
     end.
+
+
