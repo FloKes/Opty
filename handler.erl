@@ -30,5 +30,10 @@ handler(Client, Validator, Store, Reads, Writes, TransactionId) ->
         {commit, Ref} ->
             Validator ! {validate, Ref, Reads, Writes, Client, TransactionId};
         abort ->
+            Tag = make_ref(),
+            lists:foreach(fun({Entry, _}) -> 
+                  Entry ! {deleteReads, TransactionId, Tag, self()}
+                  end, 
+                  Reads),
             ok
     end.
