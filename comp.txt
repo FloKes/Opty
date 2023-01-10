@@ -1,0 +1,13 @@
+erl -name opty@127.0.0.1
+erl -name opty-srv@127.0.0.1
+
+opty:start(4,10,1,1,1).
+opty_local:start(4,10,1,1,1).
+
+c(client).
+c(entry).
+c(handler).
+c(opty).
+c(server).
+c(store).
+c(validator).

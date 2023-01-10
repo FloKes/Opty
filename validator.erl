@@ -12,7 +12,7 @@ validator() ->
         {validate, Ref, Reads, Writes, Client, TransactionId} ->
             Tag = make_ref(),
 
-            send_write_checks(Writes, Tag), 
+            send_write_checks(Writes, Tag, TransactionId), 
             case check_writes(length(Writes), Tag) of  %% TODO: COMPLETE
                 ok ->
                     update(Writes),  %% TODO: COMPLETE
@@ -59,10 +59,10 @@ update(Writes) ->
                   end, 
                   Writes).
 
-send_write_checks(Writes, Tag) ->
+send_write_checks(Writes, Tag, TransactionId) ->
     Self = self(),
     lists:foreach(fun({_, Entry, _}) -> 
-                  Entry ! {check, Tag, Self}
+                  Entry ! {check, Tag, Self, TransactionId}
                   end, 
                   Writes).
 

@@ -19,8 +19,9 @@ entry(Value, Time, ActiveReads) ->
             end;
         {write, New} ->
             entry(New, make_ref(), ActiveReads);
-        {check, Ref, From} ->
-            case ActiveReads of 
+        {check, Ref, From, TransactionId} ->
+            WoList = lists:delete(TransactionId,ActiveReads),
+            case WoList of 
                 [] -> From ! {Ref, ok};
                 _ -> From ! {Ref, abort}
             end,
