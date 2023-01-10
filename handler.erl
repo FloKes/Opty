@@ -20,18 +20,18 @@ handler(Client, Validator, Store, Reads, Writes, TransactionId) ->
                     Entry ! {read, Ref, self(), TransactionId},
                     handler(Client, Validator, Store, Reads, Writes, TransactionId)
             end;
-        {Ref, Entry, Value, Time} -> 
-            Client ! {value, Ref, Value},
-            handler(Client, Validator, Store, [{Entry, Time}|Reads], Writes, TransactionId);
         {write, N, Value} ->
             Entry = store:lookup(N, Store),
             Added = lists:keystore(N, 1, Writes, {N, Entry, Value}),
             handler(Client, Validator, Store, Reads, Added, TransactionId);
         {commit, Ref} ->
             Validator ! {validate, Ref, Reads, Writes, Client, TransactionId};
+        {Ref, Entry, Value} -> 
+            Client ! {value, Ref, Value},
+            handler(Client, Validator, Store, [{Entry}|Reads], Writes, TransactionId);
         abort ->
             Tag = make_ref(),
-            lists:foreach(fun({Entry, _}) -> 
+            lists:foreach(fun({Entry}) -> 
                   Entry ! {deleteReads, TransactionId, Tag, self()}
                   end, 
                   Reads),

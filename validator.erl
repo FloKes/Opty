@@ -38,7 +38,7 @@ validator() ->
 
 send_read_deletes(Reads, Tag, TransactionId) ->
     Self = self(),
-    lists:foreach(fun({Entry, _}) -> 
+    lists:foreach(fun({Entry}) -> 
                   Entry ! {deleteReads, TransactionId, Tag, Self}
                   end, 
                   Reads).

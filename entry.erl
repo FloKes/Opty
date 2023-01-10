@@ -5,30 +5,30 @@ new(Value) ->
     spawn_link(fun() -> init(Value) end).
 
 init(Value) ->
-    entry(Value, make_ref(), []).
+    entry(Value, []).
 
-entry(Value, Time, ActiveReads) ->
+entry(Value, ActiveReads) ->
     receive
         {read, Ref, From, TransactionId} ->
-            From ! {Ref, self(), Value, Time},
+            From ! {Ref, self(), Value},
             case lists:member(TransactionId, ActiveReads) of
                 true ->
-                    entry(Value, Time, ActiveReads);
+                    entry(Value, ActiveReads);
                 false -> 
-                    entry(Value, Time, [TransactionId | ActiveReads])
+                    entry(Value, [TransactionId | ActiveReads])
             end;
         {write, New} ->
-            entry(New, make_ref(), ActiveReads);
+            entry(New, ActiveReads);
         {check, Ref, From, TransactionId} ->
             WoList = lists:delete(TransactionId,ActiveReads),
             case WoList of 
                 [] -> From ! {Ref, ok};
                 _ -> From ! {Ref, abort}
             end,
-            entry(Value, Time, ActiveReads);
+            entry(Value, ActiveReads);
         {deleteReads, TransactionId, Ref, From} ->
             From ! Ref,
-            entry(Value, Time, lists:delete(TransactionId, ActiveReads));
+            entry(Value, lists:delete(TransactionId, ActiveReads));
         stop ->
             ok
     end.
